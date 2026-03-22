@@ -1,7 +1,6 @@
 """Tests for backtester.optimizers module."""
-from __future__ import annotations
 
-import numpy as np
+from __future__ import annotations
 
 from backtester.optimizers import (
     BacktestOptimizer,
@@ -33,9 +32,7 @@ class TestRandomSearch:
 
 class TestGridSearchExhaustive:
     def test_grid_search_exhaustive(self) -> None:
-        opt = GridSearchOptimizer(
-            param_grid={"comp": {"window": [40.0, 60.0, 80.0]}}
-        )
+        opt = GridSearchOptimizer(param_grid={"comp": {"window": [40.0, 60.0, 80.0]}})
         result = opt.optimize(
             {"comp": {"window": 50.0}},
             _simple_eval,
@@ -70,7 +67,7 @@ class TestGradientDescentCallback:
             return OptimizeResult(base, 1.0, __import__("pandas").DataFrame(), 1)
 
         opt = GradientDescentOptimizer(train_fn=_train)
-        result = opt.optimize({"comp": {"window": 50.0}}, _simple_eval, 10)
+        opt.optimize({"comp": {"window": 50.0}}, _simple_eval, 10)
         assert len(called) == 1
 
 

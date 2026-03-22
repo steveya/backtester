@@ -1,4 +1,5 @@
 """Tests for backtester.analytics module."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -23,10 +24,19 @@ class TestPerformanceTableColumns:
         r = _returns()
         t = performance_table(r)
         expected = {
-            "annualized_return", "annualized_vol", "sharpe", "sortino",
-            "calmar", "max_drawdown", "max_drawdown_duration_days",
-            "win_rate", "profit_factor", "skew", "kurtosis",
-            "best_day", "worst_day",
+            "annualized_return",
+            "annualized_vol",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "max_drawdown",
+            "max_drawdown_duration_days",
+            "win_rate",
+            "profit_factor",
+            "skew",
+            "kurtosis",
+            "best_day",
+            "worst_day",
         }
         assert expected.issubset(set(t.columns))
 

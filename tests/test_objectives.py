@@ -1,4 +1,5 @@
 """Tests for backtester.objectives module."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -53,10 +54,12 @@ class TestMaxDrawdownKnown:
 
 class TestTurnoverFromWeights:
     def test_turnover_from_weights(self) -> None:
-        wh = pd.DataFrame({
-            "a": [0.5, 0.3, 0.6],
-            "b": [0.5, 0.7, 0.4],
-        })
+        wh = pd.DataFrame(
+            {
+                "a": [0.5, 0.3, 0.6],
+                "b": [0.5, 0.7, 0.4],
+            }
+        )
         obj = TurnoverObjective()
         val = obj.compute(pd.Series([0.01, 0.02, 0.01]), weights_history=wh)
         assert val > 0

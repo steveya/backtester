@@ -1,9 +1,9 @@
 """Production backtesting framework for systematic strategies."""
 
 from .cv import (
+    CombinatorialPurgedCV,
     CVScheme,
     CVSplit,
-    CombinatorialPurgedCV,
     ExpandingCV,
     PurgedKFoldCV,
     WalkForwardCV,

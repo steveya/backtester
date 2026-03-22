@@ -1,4 +1,5 @@
 """Tests for backtester.statistical module."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -53,15 +54,19 @@ class TestStrategyClustering:
         rng = np.random.default_rng(42)
         base_a = rng.normal(0, 0.01, 200)
         base_b = rng.normal(0, 0.01, 200)
-        returns = pd.DataFrame({
-            "s1": base_a + rng.normal(0, 0.001, 200),
-            "s2": base_a + rng.normal(0, 0.001, 200),
-            "s3": base_b + rng.normal(0, 0.001, 200),
-            "s4": base_b + rng.normal(0, 0.001, 200),
-        })
+        returns = pd.DataFrame(
+            {
+                "s1": base_a + rng.normal(0, 0.001, 200),
+                "s2": base_a + rng.normal(0, 0.001, 200),
+                "s3": base_b + rng.normal(0, 0.001, 200),
+                "s4": base_b + rng.normal(0, 0.001, 200),
+            }
+        )
         result = strategy_clustering(returns, n_clusters=2)
         assert len(result) == 4
         assert result["cluster"].nunique() == 2
         # s1/s2 should be in same cluster, s3/s4 in same cluster
-        assert result.loc[result["strategy"] == "s1", "cluster"].values[0] == \
-               result.loc[result["strategy"] == "s2", "cluster"].values[0]
+        assert (
+            result.loc[result["strategy"] == "s1", "cluster"].values[0]
+            == result.loc[result["strategy"] == "s2", "cluster"].values[0]
+        )

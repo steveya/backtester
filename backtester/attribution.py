@@ -1,4 +1,5 @@
 """PnL attribution: signal, instrument, and sector decomposition."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -14,7 +15,10 @@ def signal_attribution(
 
     Returns: date x [signal_1, ..., residual, total].
     """
-    total_pnl = (weights_history * returns.reindex(index=weights_history.index, columns=weights_history.columns).fillna(0)).sum(axis=1)
+    total_pnl = (
+        weights_history
+        * returns.reindex(index=weights_history.index, columns=weights_history.columns).fillna(0)
+    ).sum(axis=1)
     total_weight = sum(signal_weights.values()) or 1.0
 
     result = pd.DataFrame(index=total_pnl.index)

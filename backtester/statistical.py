@@ -1,4 +1,5 @@
 """Statistical tests for strategy evaluation."""
+
 from __future__ import annotations
 
 from typing import Callable
@@ -63,7 +64,9 @@ def deflated_sharpe_ratio(
     try:
         from scipy.stats import norm
     except ImportError:
-        raise ImportError("scipy required for deflated_sharpe_ratio. Install with: pip install scipy")
+        raise ImportError(
+            "scipy required for deflated_sharpe_ratio. Install with: pip install scipy"
+        )
 
     # Expected max Sharpe from n_trials under null
     e_max_sharpe = np.sqrt(variance_of_sharpes) * (
@@ -101,7 +104,9 @@ def strategy_clustering(
 
     labels = fcluster(Z, t=n_clusters, criterion="maxclust")
 
-    return pd.DataFrame({
-        "strategy": returns_matrix.columns,
-        "cluster": labels,
-    })
+    return pd.DataFrame(
+        {
+            "strategy": returns_matrix.columns,
+            "cluster": labels,
+        }
+    )

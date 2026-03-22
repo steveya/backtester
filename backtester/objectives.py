@@ -1,4 +1,5 @@
 """Performance objectives for backtesting."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -28,9 +29,7 @@ class SharpeObjective:
         std = portfolio_returns.std()
         if std < 1e-12:
             return 0.0
-        return float(
-            portfolio_returns.mean() / std * np.sqrt(self.annualization)
-        )
+        return float(portfolio_returns.mean() / std * np.sqrt(self.annualization))
 
 
 @dataclass
@@ -46,9 +45,7 @@ class SortinoObjective:
         downside_std = downside.std() if len(downside) > 1 else 0.0
         if downside_std == 0:
             return 0.0
-        return float(
-            portfolio_returns.mean() / downside_std * np.sqrt(self.annualization)
-        )
+        return float(portfolio_returns.mean() / downside_std * np.sqrt(self.annualization))
 
 
 @dataclass

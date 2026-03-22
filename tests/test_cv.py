@@ -1,11 +1,12 @@
 """Tests for backtester.cv module."""
+
 from __future__ import annotations
 
 import pandas as pd
 
 from backtester.cv import (
-    CVScheme,
     CombinatorialPurgedCV,
+    CVScheme,
     ExpandingCV,
     PurgedKFoldCV,
     WalkForwardCV,

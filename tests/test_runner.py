@@ -1,15 +1,14 @@
 """Tests for backtester.runner module."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 import pandas as pd
-
 from alphaforge.pipeline.protocols import PipelineVariant, SimplePipeline
 
-from backtester.cv import CVSplit, WalkForwardCV, PurgedKFoldCV
+from backtester.cv import CVSplit, PurgedKFoldCV, WalkForwardCV
 from backtester.objectives import MaxDrawdownObjective, SharpeObjective
 from backtester.optimizers import RandomSearchOptimizer
 from backtester.result import EvalFoldResult
@@ -27,6 +26,7 @@ _RETURNS = pd.DataFrame(
 @dataclass
 class _StubSignal:
     name: str = "stub"
+
     def score(self, df, **params):
         return pd.Series({"a": 0.5, "b": -0.3, "c": 0.1})
 
@@ -56,6 +56,7 @@ def _make_eval_fn(returns: pd.DataFrame):
             columns=scores.index,
         )
         return EvalFoldResult(portfolio_returns=port_ret, weights_history=wh)
+
     return evaluate
 
 
@@ -115,10 +116,13 @@ class TestRunnerEmptyPipeline:
         @dataclass
         class _EmptyPipeline:
             name: str = "empty"
+
             def run(self, df, **p):
                 return pd.Series(dtype="float64")
+
             def get_all_params(self):
                 return {}
+
             def set_all_params(self, p):
                 pass
 

@@ -1,4 +1,5 @@
 """Performance analytics: pure functions on return series."""
+
 from __future__ import annotations
 
 from typing import Callable
@@ -7,9 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def performance_table(
-    returns: pd.Series, annualization: float = 252.0
-) -> pd.DataFrame:
+def performance_table(returns: pd.Series, annualization: float = 252.0) -> pd.DataFrame:
     """Comprehensive performance summary."""
     if returns.empty:
         return pd.DataFrame()
@@ -60,9 +59,7 @@ def performance_table(
     return pd.DataFrame([metrics])
 
 
-def rolling_metrics(
-    returns: pd.Series, window: int = 63
-) -> pd.DataFrame:
+def rolling_metrics(returns: pd.Series, window: int = 63) -> pd.DataFrame:
     """Rolling Sharpe, vol, drawdown."""
     roll_mean = returns.rolling(window).mean()
     roll_std = returns.rolling(window).std()
@@ -72,11 +69,13 @@ def rolling_metrics(
     roll_max = cum.rolling(window, min_periods=1).max()
     roll_dd = (cum - roll_max) / roll_max
 
-    return pd.DataFrame({
-        "rolling_sharpe": roll_sharpe,
-        "rolling_vol": roll_std * np.sqrt(252),
-        "rolling_drawdown": roll_dd,
-    })
+    return pd.DataFrame(
+        {
+            "rolling_sharpe": roll_sharpe,
+            "rolling_vol": roll_std * np.sqrt(252),
+            "rolling_drawdown": roll_dd,
+        }
+    )
 
 
 def drawdown_table(returns: pd.Series, top_n: int = 5) -> pd.DataFrame:
@@ -94,12 +93,14 @@ def drawdown_table(returns: pd.Series, top_n: int = 5) -> pd.DataFrame:
     groups = (~is_dd).cumsum()
     dd_periods = []
     for g, grp in dd[is_dd].groupby(groups[is_dd]):
-        dd_periods.append({
-            "start": grp.index[0],
-            "trough": grp.idxmin(),
-            "depth": float(grp.min()),
-            "duration": len(grp),
-        })
+        dd_periods.append(
+            {
+                "start": grp.index[0],
+                "trough": grp.idxmin(),
+                "depth": float(grp.min()),
+                "duration": len(grp),
+            }
+        )
 
     result = pd.DataFrame(dd_periods).sort_values("depth").head(top_n).reset_index(drop=True)
     return result
@@ -121,24 +122,22 @@ def param_stability(
                 all_keys.add((comp, pname))
 
     for comp, pname in sorted(all_keys):
-        values = [
-            pf[comp][pname]
-            for pf in params_per_fold
-            if comp in pf and pname in pf[comp]
-        ]
+        values = [pf[comp][pname] for pf in params_per_fold if comp in pf and pname in pf[comp]]
         if not values:
             continue
         arr = np.array(values)
         mu = arr.mean()
         sigma = arr.std()
         cv = sigma / abs(mu) if abs(mu) > 1e-10 else float("nan")
-        rows.append({
-            "component": comp,
-            "param": pname,
-            "mean": mu,
-            "std": sigma,
-            "cv": cv,
-        })
+        rows.append(
+            {
+                "component": comp,
+                "param": pname,
+                "mean": mu,
+                "std": sigma,
+                "cv": cv,
+            }
+        )
     return pd.DataFrame(rows)
 
 

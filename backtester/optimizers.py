@@ -1,9 +1,10 @@
 """Parameter search strategies for backtesting."""
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Callable, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
@@ -62,11 +63,13 @@ class RandomSearchOptimizer:
             except Exception:
                 score = float("nan")
 
-            trials.append({
-                "trial_id": trial_id,
-                "params_json": json.dumps(sampled),
-                "score": score,
-            })
+            trials.append(
+                {
+                    "trial_id": trial_id,
+                    "params_json": json.dumps(sampled),
+                    "score": score,
+                }
+            )
 
         trials_df = pd.DataFrame(trials)
         valid = trials_df.dropna(subset=["score"])
@@ -108,9 +111,7 @@ class GridSearchOptimizer:
 
         trials: list[dict] = []
         for trial_id, combo in enumerate(combos):
-            sampled: dict[str, dict[str, float]] = {
-                c: dict(p) for c, p in base_params.items()
-            }
+            sampled: dict[str, dict[str, float]] = {c: dict(p) for c, p in base_params.items()}
             for (comp, pname), val in combo.items():
                 if comp in sampled:
                     sampled[comp][pname] = val
@@ -120,11 +121,13 @@ class GridSearchOptimizer:
             except Exception:
                 score = float("nan")
 
-            trials.append({
-                "trial_id": trial_id,
-                "params_json": json.dumps(sampled),
-                "score": score,
-            })
+            trials.append(
+                {
+                    "trial_id": trial_id,
+                    "params_json": json.dumps(sampled),
+                    "score": score,
+                }
+            )
 
         trials_df = pd.DataFrame(trials)
         valid = trials_df.dropna(subset=["score"])
@@ -192,11 +195,13 @@ class BayesianOptimizer:
 
         trials_data = []
         for t in study.trials:
-            trials_data.append({
-                "trial_id": t.number,
-                "params_json": json.dumps(t.params),
-                "score": t.value if t.value is not None else float("nan"),
-            })
+            trials_data.append(
+                {
+                    "trial_id": t.number,
+                    "params_json": json.dumps(t.params),
+                    "score": t.value if t.value is not None else float("nan"),
+                }
+            )
 
         best = study.best_trial
         # Reconstruct best_params in nested format

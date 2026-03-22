@@ -1,12 +1,11 @@
 """BacktestRunner: generic orchestrator for backtesting."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Callable
 
-import numpy as np
 import pandas as pd
-
 from alphaforge.logging import get_logger
 from alphaforge.pipeline.protocols import Pipeline, PipelineVariant
 
@@ -134,7 +133,10 @@ class BacktestRunner:
         if primary in rankings.columns and rankings[primary].notna().any():
             asc = self.objectives[0].direction == "minimize"
             rankings["rank"] = rankings[primary].rank(ascending=asc)
-            best = rankings.loc[rankings[primary].idxmax() if not asc else rankings[primary].idxmin(), "variant_name"]
+            best = rankings.loc[
+                rankings[primary].idxmax() if not asc else rankings[primary].idxmin(),
+                "variant_name",
+            ]
         else:
             rankings["rank"] = float("nan")
             best = variants[0].name if variants else ""

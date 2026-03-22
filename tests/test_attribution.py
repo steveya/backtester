@@ -1,4 +1,5 @@
 """Tests for backtester.attribution module."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -27,7 +28,8 @@ _WEIGHTS = pd.DataFrame(
 class TestSignalAttributionSums:
     def test_signal_attribution_sums(self) -> None:
         result = signal_attribution(
-            _WEIGHTS, _RETURNS,
+            _WEIGHTS,
+            _RETURNS,
             {"sig1": 0.6, "sig2": 0.4},
             {"sig1": pd.DataFrame(), "sig2": pd.DataFrame()},
         )
@@ -56,7 +58,8 @@ class TestSectorAttribution:
 class TestSingleSignalAttribution:
     def test_single_signal_attribution(self) -> None:
         result = signal_attribution(
-            _WEIGHTS, _RETURNS,
+            _WEIGHTS,
+            _RETURNS,
             {"only": 1.0},
             {"only": pd.DataFrame()},
         )
