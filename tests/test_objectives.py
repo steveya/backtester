@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from backtester.objectives import (
     CalmarObjective,
@@ -63,6 +64,14 @@ class TestTurnoverFromWeights:
         obj = TurnoverObjective()
         val = obj.compute(pd.Series([0.01, 0.02, 0.01]), weights_history=wh)
         assert val > 0
+
+
+class TestTurnoverFromTurnoverHistory:
+    def test_turnover_from_turnover_history(self) -> None:
+        turnover = pd.Series([0.0, 0.2, 0.4])
+        obj = TurnoverObjective()
+        val = obj.compute(pd.Series([0.01, 0.02, 0.01]), turnover_history=turnover)
+        assert val == pytest.approx(0.2)
 
 
 class TestCalmar:

@@ -5,6 +5,9 @@ A production-grade backtesting framework for systematic trading strategies, with
 ## Features
 
 - **Walk-forward & purged cross-validation** — avoid lookahead bias with `WalkForwardCV`, `PurgedKFoldCV`, `CombinatorialPurgedCV`, and `ExpandingCV`
+- **Execution-clock foundations** — canonical execution-bar and target-schedule abstractions for provider-agnostic simulation inputs
+- **Event-based execution engine** — align sparse target events to execution bars and simulate close-to-close rebalances
+- **Execution-clock walk-forward runner** — split on a separate decision index and evaluate each fold on execution-bar intervals
 - **Multiple optimization backends** — random search, grid search, Bayesian (optuna), and gradient-descent callback adapter
 - **Composable objectives** — Sharpe, Sortino, Calmar, max drawdown, turnover, and weighted composites
 - **Performance analytics** — performance tables, rolling metrics, drawdown analysis, parameter stability and sensitivity
@@ -18,8 +21,9 @@ pip install -e .
 
 # With optional dependencies
 pip install -e ".[bayesian]"   # Adds optuna for Bayesian optimization
+pip install -e ".[docs]"      # Adds MkDocs for package documentation
 pip install -e ".[stats]"     # Adds scipy for statistical tests
-pip install -e ".[dev]"       # Adds pytest, ruff for development
+pip install -e ".[dev]"       # Adds pytest, ruff, and docs tooling for development
 ```
 
 ## Quick Start
@@ -61,6 +65,54 @@ result = runner.run(
 print(result.metrics)           # Aggregated performance
 print(result.per_fold_metrics)  # Breakdown by fold
 ```
+
+## Execution-Clock Walk-Forward
+
+```python
+import pandas as pd
+from backtester import (
+    EventRebalanceEngine,
+    ExecutionBarFrame,
+    SharpeObjective,
+    TargetSchedule,
+    WalkForwardCV,
+    WalkForwardExecutionRunner,
+)
+
+bars = ExecutionBarFrame.from_frame(
+    data=execution_df,
+    timestamp_col="ts",
+    asset_col="asset",
+    close_col="close",
+    volume_col="volume",
+)
+
+decision_index = pd.DatetimeIndex(decision_timestamps_utc)
+
+def generate_targets(context):
+    targets = pd.DataFrame(
+        strategy_targets_for(context.eval_decision_times),
+        index=context.eval_decision_times,
+    )
+    return TargetSchedule(targets, target_kind="weights")
+
+runner = WalkForwardExecutionRunner(
+    cv=WalkForwardCV(eval_window=4, step=4, min_train=12),
+    objectives=[SharpeObjective()],
+    engine=EventRebalanceEngine(),
+)
+
+result = runner.run(bars, decision_index, generate_targets)
+
+print(result.metrics)
+print(result.per_fold_metrics)
+```
+
+`WalkForwardExecutionRunner` keeps the decision clock separate from the
+execution clock. Each selected decision timestamp is mapped to its holding
+interval on the execution bars until the next decision boundary, so the final
+decision in a fold still realizes post-trade PnL without leaking later
+decision timestamps.
 
 ## Comparing Strategy Variants
 
@@ -145,17 +197,30 @@ clusters = strategy_clustering(returns_matrix, n_clusters=3)
 | `PurgedKFoldCV` | Lopez de Prado purged k-fold with embargo |
 | `CombinatorialPurgedCV` | All combinations of test groups for path diversity |
 
+## Documentation
+
+Long-form package documentation lives in `docs/`.
+
+```bash
+pip install -e ".[dev]"
+mkdocs build --strict
+python examples/execution_walkforward_synthetic.py
+```
+
 ## Development
 
 ```bash
 # Run tests
-pytest tests/ -v
+python -m pytest tests/ -v
 
 # Lint
 ruff check backtester/ tests/
 
+# Build docs
+mkdocs build --strict
+
 # Test with coverage
-pytest tests/ --cov=backtester --cov-report=term-missing
+python -m pytest tests/ --cov=backtester --cov-report=term-missing
 ```
 
 ## License

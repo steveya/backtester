@@ -16,10 +16,14 @@ dependencies = [
 
 [project.optional-dependencies]
 bayesian = ["optuna>=3.0"]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
 stats = ["scipy>=1.11"]
 all = ["backtester[bayesian,stats]"]
 dev = [
-    "backtester[all]",
+    "backtester[all,docs]",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.4.0",

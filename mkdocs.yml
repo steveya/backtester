@@ -1,0 +1,27 @@
+site_name: backtester
+site_description: General-purpose backtesting framework for systematic strategies
+repo_name: backtester
+theme:
+  name: material
+  features:
+    - navigation.sections
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+strict: true
+validation:
+  omitted_files: warn
+  absolute_links: relative_to_docs
+  unrecognized_links: warn
+  anchors: warn
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Guides:
+      - Integration: guides/integration.md
+  - Development: development.md
+  - API:
+      - Overview: api/index.md

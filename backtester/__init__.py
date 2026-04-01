@@ -8,6 +8,8 @@ from .cv import (
     PurgedKFoldCV,
     WalkForwardCV,
 )
+from .execution import ExecutionBarFrame, TargetKind, TargetSchedule
+from .execution_engine import EventRebalanceEngine
 from .objectives import (
     CalmarObjective,
     CompositeObjective,
@@ -25,8 +27,17 @@ from .optimizers import (
     OptimizeResult,
     RandomSearchOptimizer,
 )
-from .result import BacktestResult, EvalFoldResult, VariantBacktestResult
+from .result import (
+    BacktestResult,
+    EvalFoldResult,
+    ExecutionBacktestResult,
+    ExecutionFoldContext,
+    VariantBacktestResult,
+    WalkForwardExecutionFoldResult,
+    WalkForwardExecutionResult,
+)
 from .runner import BacktestRunner
+from .walkforward import ExecutionEngine, ExecutionTargetGenerator, WalkForwardExecutionRunner
 
 __version__ = "0.1.0"
 
@@ -46,6 +57,15 @@ __all__ = [
     "TurnoverObjective",
     "CalmarObjective",
     "CompositeObjective",
+    # Execution data
+    "ExecutionBarFrame",
+    "TargetSchedule",
+    "TargetKind",
+    "EventRebalanceEngine",
+    "ExecutionEngine",
+    "ExecutionTargetGenerator",
+    "ExecutionFoldContext",
+    "WalkForwardExecutionRunner",
     # Optimizers
     "BacktestOptimizer",
     "RandomSearchOptimizer",
@@ -59,4 +79,7 @@ __all__ = [
     "BacktestResult",
     "VariantBacktestResult",
     "EvalFoldResult",
+    "ExecutionBacktestResult",
+    "WalkForwardExecutionFoldResult",
+    "WalkForwardExecutionResult",
 ]

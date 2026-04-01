@@ -68,6 +68,11 @@ class TurnoverObjective:
     direction: str = "minimize"
 
     def compute(self, portfolio_returns: pd.Series, **context: Any) -> float:
+        turnover_history = context.get("turnover_history")
+        if turnover_history is not None:
+            if turnover_history.empty:
+                return 0.0
+            return float(turnover_history.mean())
         weights_history = context.get("weights_history")
         if weights_history is None or weights_history.empty:
             return 0.0
