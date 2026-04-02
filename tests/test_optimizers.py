@@ -6,6 +6,7 @@ from backtester.optimizers import (
     BacktestOptimizer,
     GradientDescentOptimizer,
     GridSearchOptimizer,
+    NoOpOptimizer,
     OptimizeResult,
     RandomSearchOptimizer,
 )
@@ -28,6 +29,25 @@ class TestRandomSearch:
         assert isinstance(result, OptimizeResult)
         assert result.n_evaluations == 20
         assert len(result.all_trials) == 20
+
+
+class TestNoOpOptimizer:
+    def test_no_op_optimizer(self) -> None:
+        base_params = {"comp": {"window": 50.0, "weight": 0.2}}
+        calls: list[dict[str, dict[str, float]]] = []
+
+        def _eval(params: dict[str, dict[str, float]]) -> float:
+            calls.append(params)
+            return 1.23
+
+        opt = NoOpOptimizer()
+        result = opt.optimize(base_params, _eval, n_trials=99)
+
+        assert result.best_params == base_params
+        assert result.best_score == 1.23
+        assert result.n_evaluations == 1
+        assert len(result.all_trials) == 1
+        assert calls == [base_params]
 
 
 class TestGridSearchExhaustive:
@@ -73,5 +93,6 @@ class TestGradientDescentCallback:
 
 class TestOptimizerSatisfiesProtocol:
     def test_optimizer_satisfies_protocol(self) -> None:
+        assert isinstance(NoOpOptimizer(), BacktestOptimizer)
         assert isinstance(RandomSearchOptimizer(), BacktestOptimizer)
         assert isinstance(GridSearchOptimizer(), BacktestOptimizer)

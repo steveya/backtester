@@ -31,6 +31,42 @@ class BacktestOptimizer(Protocol):
 
 
 @dataclass
+class NoOpOptimizer:
+    """Pass-through optimizer for fold-refit strategies without search."""
+
+    name: str = "no_op"
+
+    def optimize(
+        self,
+        base_params: dict[str, dict[str, float]],
+        evaluate_fn: Callable[[dict[str, dict[str, float]]], float],
+        n_trials: int,
+    ) -> OptimizeResult:
+        del n_trials
+
+        try:
+            score = evaluate_fn(base_params)
+        except Exception:
+            score = float("nan")
+
+        trials_df = pd.DataFrame(
+            [
+                {
+                    "trial_id": 0,
+                    "params_json": json.dumps(base_params),
+                    "score": score,
+                }
+            ]
+        )
+        return OptimizeResult(
+            best_params={component: dict(params) for component, params in base_params.items()},
+            best_score=float(score),
+            all_trials=trials_df,
+            n_evaluations=1,
+        )
+
+
+@dataclass
 class RandomSearchOptimizer:
     name: str = "random_search"
     seed: int = 42

@@ -8,7 +8,7 @@ A production-grade backtesting framework for systematic trading strategies, with
 - **Execution-clock foundations** — canonical execution-bar and target-schedule abstractions for provider-agnostic simulation inputs
 - **Event-based execution engine** — align sparse target events to execution bars and simulate close-to-close rebalances
 - **Execution-clock walk-forward runner** — split on a separate decision index and evaluate each fold on execution-bar intervals
-- **Multiple optimization backends** — random search, grid search, Bayesian (optuna), and gradient-descent callback adapter
+- **Multiple optimization backends** — no-op, random search, grid search, Bayesian (optuna), and gradient-descent callback adapter
 - **Composable objectives** — Sharpe, Sortino, Calmar, max drawdown, turnover, and weighted composites
 - **Performance analytics** — performance tables, rolling metrics, drawdown analysis, parameter stability and sensitivity
 - **PnL attribution** — decompose returns by signal, instrument, or sector
@@ -34,7 +34,7 @@ from backtester import (
     BacktestRunner,
     WalkForwardCV,
     SharpeObjective,
-    RandomSearchOptimizer,
+    NoOpOptimizer,
     EvalFoldResult,
 )
 
@@ -52,7 +52,7 @@ def evaluate_fn(pipeline, split):
 runner = BacktestRunner(
     cv=WalkForwardCV(eval_window=63, step=21, min_train=252),
     objectives=[SharpeObjective()],
-    optimizer=RandomSearchOptimizer(seed=42),
+    optimizer=NoOpOptimizer(),
 )
 
 result = runner.run(
@@ -114,6 +114,43 @@ interval on the execution bars until the next decision boundary, so the final
 decision in a fold still realizes post-trade PnL without leaking later
 decision timestamps.
 
+Use `NoOpOptimizer` when the strategy refits on each fold but does not need
+hyperparameter search. Use `RandomSearchOptimizer`, `GridSearchOptimizer`, or
+`BayesianOptimizer` when the fold evaluation genuinely needs parameter tuning.
+
+`EvalFoldResult` can also carry `signal_scores` and arbitrary `artifacts`.
+`BacktestRunner` preserves fold artifacts on the final `BacktestResult`, and
+passes `weights_history`, `signal_scores`, `artifacts`, and `split` into
+objective `compute()` calls for context-aware scoring.
+
+## Fold-Refit Strategies
+
+```python
+from backtester import BacktestRunner, EvalFoldResult, NoOpOptimizer, SharpeObjective, WalkForwardCV
+
+def evaluate_fn(pipeline, split):
+    fitted_model = fit_model(train_dates=split.train_dates)
+    predictions = predict_on_eval(fitted_model, split.eval_dates)
+    weights = build_eval_weights(predictions)
+    pnl = weights.mul(eval_returns.loc[split.eval_dates], axis=0).sum(axis=1)
+    return EvalFoldResult(
+        portfolio_returns=pnl,
+        weights_history=weights,
+        signal_scores={"alpha": predictions},
+        artifacts={"model_coefficients": fitted_model.params},
+    )
+
+runner = BacktestRunner(
+    cv=WalkForwardCV(eval_window=63, step=21, min_train=252),
+    objectives=[SharpeObjective()],
+    optimizer=NoOpOptimizer(),
+)
+```
+
+This pattern is the intended adapter surface for application packages that
+refit an estimator on each fold and want the shared runner to own only the
+generic orchestration and accounting layers.
+
 ## Comparing Strategy Variants
 
 ```python
@@ -153,6 +190,44 @@ dd = drawdown_table(result.returns_history, top_n=5)
 # Parameter consistency across folds
 stability = param_stability(result.params_per_fold)
 ```
+
+## Accounting
+
+```python
+from backtester import (
+    held_weights_from_rebalances,
+    linear_turnover_costs,
+    per_asset_pnl,
+    scenario_returns,
+)
+
+weights_history = held_weights_from_rebalances(
+    rebalance_weights=weekly_weights,
+    execution_dates=execution_dates,
+    execution_index=daily_returns.index,
+)
+
+pnl_by_asset = per_asset_pnl(weights_history, daily_returns)
+costs = linear_turnover_costs(
+    weekly_weights,
+    execution_dates,
+    daily_returns.index,
+    half_spread_bps=5.0,
+)
+
+scenarios, by_asset = scenario_returns(
+    weights_history,
+    daily_returns,
+    rebalance_weights=weekly_weights,
+    execution_dates=execution_dates,
+    cost_multipliers=(1.0, 2.0, 3.0),
+    base_half_spread_bps=5.0,
+)
+```
+
+These helpers are provider-agnostic and strategy-agnostic. Application packages
+own signal generation and weight construction; the shared backtester owns the
+generic conversion from weights and returns into PnL and cost scenarios.
 
 ## Attribution
 

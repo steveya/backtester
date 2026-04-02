@@ -17,6 +17,7 @@ class EvalFoldResult:
     portfolio_returns: pd.Series
     weights_history: pd.DataFrame
     signal_scores: dict[str, pd.Series] | None = None
+    artifacts: dict[str, object] | None = None
 
 
 @dataclass
@@ -26,6 +27,7 @@ class BacktestResult:
     weights_history: pd.DataFrame
     returns_history: pd.Series
     signal_history: dict[str, pd.DataFrame] | None
+    fold_artifacts: list[dict[str, object]] | None
 
     metrics: dict[str, float]
     per_fold_metrics: pd.DataFrame

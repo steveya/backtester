@@ -17,6 +17,18 @@ from .result import BacktestResult, EvalFoldResult, VariantBacktestResult
 log = get_logger(__name__)
 
 
+def _objective_context(
+    split: CVSplit | None,
+    fold_result: EvalFoldResult,
+) -> dict[str, object]:
+    return {
+        "weights_history": fold_result.weights_history,
+        "signal_scores": fold_result.signal_scores,
+        "artifacts": fold_result.artifacts,
+        "split": split,
+    }
+
+
 @dataclass
 class BacktestRunner:
     """Generic backtest orchestrator. Composes CV + Optimizer + Objectives."""
@@ -35,6 +47,7 @@ class BacktestRunner:
         """Run the full backtest."""
         all_returns: list[pd.Series] = []
         all_weights: list[pd.DataFrame] = []
+        fold_artifacts: list[dict[str, object]] = []
         per_fold_rows: list[dict] = []
         params_per_fold: list[dict] = []
 
@@ -54,7 +67,10 @@ class BacktestRunner:
                     result = evaluate_fn(pipeline, split)
                     if result.portfolio_returns.empty:
                         return float("nan")
-                    return self.objectives[0].compute(result.portfolio_returns)
+                    return self.objectives[0].compute(
+                        result.portfolio_returns,
+                        **_objective_context(split, result),
+                    )
                 except Exception:
                     return float("nan")
 
@@ -70,11 +86,15 @@ class BacktestRunner:
 
             all_returns.append(fold_result.portfolio_returns)
             all_weights.append(fold_result.weights_history)
+            fold_artifacts.append(fold_result.artifacts or {})
 
             # Compute all objectives
             row = {"fold_id": split.fold_id}
             for obj in self.objectives:
-                row[obj.name] = obj.compute(fold_result.portfolio_returns)
+                row[obj.name] = obj.compute(
+                    fold_result.portfolio_returns,
+                    **_objective_context(split, fold_result),
+                )
             per_fold_rows.append(row)
 
             # Restore base params for next fold
@@ -89,13 +109,21 @@ class BacktestRunner:
 
         # Aggregate metrics
         metrics: dict[str, float] = {}
+        aggregate_context = {
+            "weights_history": combined_weights,
+            "signal_scores": None,
+            "artifacts": None,
+            "fold_artifacts": fold_artifacts,
+            "split": None,
+        }
         for obj in self.objectives:
-            metrics[obj.name] = obj.compute(combined_returns)
+            metrics[obj.name] = obj.compute(combined_returns, **aggregate_context)
 
         return BacktestResult(
             weights_history=combined_weights,
             returns_history=combined_returns,
             signal_history=None,
+            fold_artifacts=fold_artifacts,
             metrics=metrics,
             per_fold_metrics=per_fold_df,
             optimized_params=params_per_fold[-1] if params_per_fold else {},
@@ -152,6 +180,7 @@ class BacktestRunner:
             weights_history=pd.DataFrame(),
             returns_history=pd.Series(dtype="float64"),
             signal_history=None,
+            fold_artifacts=[],
             metrics={obj.name: float("nan") for obj in self.objectives},
             per_fold_metrics=pd.DataFrame(),
             optimized_params={},

@@ -1,5 +1,11 @@
 """Production backtesting framework for systematic strategies."""
 
+from .accounting import (
+    held_weights_from_rebalances,
+    linear_turnover_costs,
+    per_asset_pnl,
+    scenario_returns,
+)
 from .cv import (
     CombinatorialPurgedCV,
     CVScheme,
@@ -24,6 +30,7 @@ from .optimizers import (
     BayesianOptimizer,
     GradientDescentOptimizer,
     GridSearchOptimizer,
+    NoOpOptimizer,
     OptimizeResult,
     RandomSearchOptimizer,
 )
@@ -42,6 +49,11 @@ from .walkforward import ExecutionEngine, ExecutionTargetGenerator, WalkForwardE
 __version__ = "0.1.0"
 
 __all__ = [
+    # Accounting
+    "held_weights_from_rebalances",
+    "per_asset_pnl",
+    "linear_turnover_costs",
+    "scenario_returns",
     # CV
     "CVScheme",
     "CVSplit",
@@ -68,6 +80,7 @@ __all__ = [
     "WalkForwardExecutionRunner",
     # Optimizers
     "BacktestOptimizer",
+    "NoOpOptimizer",
     "RandomSearchOptimizer",
     "GridSearchOptimizer",
     "BayesianOptimizer",
